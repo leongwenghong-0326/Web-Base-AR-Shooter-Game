@@ -154,18 +154,44 @@ function getAppBasePath(): string
 }
 
 /**
+ * True for localhost / private LAN hosts (not a public cPanel domain).
+ */
+function isPrivateOrLocalHost(string $host): bool
+{
+    $host = strtolower(trim($host));
+    if ($host === '' || $host === 'localhost' || $host === '127.0.0.1' || $host === '::1') {
+        return true;
+    }
+    if (filter_var($host, FILTER_VALIDATE_IP)) {
+        return !filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+    }
+    return false;
+}
+
+/**
  * Public URL for phone QR access.
+ * Uses site.json override only when it still matches the current environment
+ * (ignores a leftover LAN IP after uploading to cPanel).
  */
 function getPublicBaseUrl(): string
 {
-    $config = getSiteConfig();
-    if ($config['publicBaseUrl'] !== '') {
-        return rtrim($config['publicBaseUrl'], '/');
-    }
-
     $scheme = getRequestScheme();
     $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost');
     $hostOnly = explode(':', $host)[0];
+    $base = getAppBasePath();
+
+    $config = getSiteConfig();
+    $override = rtrim($config['publicBaseUrl'], '/');
+    if ($override !== '') {
+        $overrideHost = (string) (parse_url($override, PHP_URL_HOST) ?: '');
+        // Stale LAN/localhost override on a live domain → ignore and use current host
+        $stalePrivate = $overrideHost !== ''
+            && isPrivateOrLocalHost($overrideHost)
+            && !isPrivateOrLocalHost($hostOnly);
+        if (!$stalePrivate) {
+            return $override;
+        }
+    }
 
     if ($hostOnly === 'localhost' || $hostOnly === '127.0.0.1') {
         $lan = detectLanIp();
@@ -181,7 +207,6 @@ function getPublicBaseUrl(): string
         }
     }
 
-    $base = getAppBasePath();
     return rtrim($scheme . '://' . $host . $base, '/');
 }
 
