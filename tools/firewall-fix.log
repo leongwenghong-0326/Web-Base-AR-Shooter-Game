@@ -1,0 +1,14 @@
+Time: 09/15/2026 09:46:22
+Created XAMPP Apache LAN Allow
+Created XAMPP Port 80 LAN Allow
+netsh rule added
+
+DisplayName             Enabled Action Profile
+-----------             ------- ------ -------
+XAMPP Apache LAN Allow     True  Allow     Any
+XAMPP Port 80 LAN Allow    True  Allow     Any
+XAMPP Apache HTTP          True  Allow     Any
+
+
+
+DONE

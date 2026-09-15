@@ -1,0 +1,19 @@
+# AR Shooter - Apache defaults
+Options -Indexes
+ServerSignature Off
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+</IfModule>
+
+AddType model/gltf-binary .glb
+AddType application/octet-stream .mind
+AddType image/jpeg .jpg .jpeg
+AddType image/png .png
+AddType image/webp .webp
+AddType application/json .json
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
